@@ -1,0 +1,6 @@
+# LSM6DS3TR Measurement System - シンプル版
+# 必要最小限の依存パッケージ
+
+numpy>=1.21.0
+pyserial>=3.5
+matplotlib>=3.5.0
