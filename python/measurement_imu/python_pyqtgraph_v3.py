@@ -38,7 +38,7 @@ class Config:
     MAX_SENSOR_NUM = 8  # 最大センサー数（グラフは常に8個表示）
     
     VIBRATION_FREQ = 70.0  # [Hz]
-    VIBRATION_CYCLES = 10.0
+    VIBRATION_CYCLES = 7.0
     DURATION = VIBRATION_CYCLES / VIBRATION_FREQ
     DATA_LEN = int(SAMPLING_RATE * DURATION)
     
@@ -147,6 +147,7 @@ class DataManager:
         self.measurement_list = []
         self.timestamps = []
         self.max_amps = np.zeros(Config.MAX_SENSOR_NUM, dtype=np.float32)
+        self.min_amps = np.zeros(Config.MAX_SENSOR_NUM, dtype=np.float32)
         self.calc_amps = np.zeros(Config.MAX_SENSOR_NUM, dtype=np.float32)
         self.is_recording = False
         self._lock = threading.Lock()
@@ -292,40 +293,7 @@ class SerialComm:
         except:
             pass
         print("Serial stopped")
-    
-    def _sync_serial(self, consecutive_errors: int, max_errors: int):
-        """
-        シリアル通信の同期を再確立
-        
-        Args:
-            consecutive_errors: 連続エラー回数
-            max_errors: 最大連続エラー数
-        """
-        # print(f"Too many consecutive errors ({consecutive_errors}). Resetting serial buffer...")
-        
-        if (consecutive_errors > max_errors) :
-            # 送信を停止
-            print("Sending 'e' to stop transmission...")
-            self.port.write(b'e')
-            # time.sleep(1)  # マイコンの処理待ち
-            
-            # # バッファをクリア
-            self.port.reset_input_buffer()
-            # self.port.reset_output_buffer()
-            # time.sleep(0.1)
-            
-            # 送信を再開
-            print("Sending 's' to restart transmission...")
-            self.port.write(b's')
-            # time.sleep(1)
-            
-            # print("Serial communication restarted successfully.")
 
-            return 0
-            # エラーカウントリセット（呼び出し元でもリセットされる
-        else :
-            # do nothing
-            return consecutive_errors
 
 
 
@@ -565,9 +533,9 @@ class Visualizer(QtWidgets.QWidget):
             
             # X, Y, Z軸のカーブ
             # 高速化: downsample と clipToView を有効化
-            curve_x = plot.plot(pen=pg.mkPen('r', width=1), name='X' if is_active else None)
-            curve_y = plot.plot(pen=pg.mkPen('g', width=1), name='Y' if is_active else None)
-            curve_z = plot.plot(pen=pg.mkPen('b', width=1), name='Z' if is_active else None)
+            curve_x = plot.plot(pen=pg.mkPen('r', width=2), name='X' if is_active else None)
+            curve_y = plot.plot(pen=pg.mkPen('g', width=2), name='Y' if is_active else None)
+            curve_z = plot.plot(pen=pg.mkPen('b', width=2), name='Z' if is_active else None)
             
             # データアイテムの高速化設定
             for curve in [curve_x, curve_y, curve_z]:
@@ -637,8 +605,14 @@ class Visualizer(QtWidgets.QWidget):
             self.curves[sid]['z'].setData(x_idx, z_data, connect='finite')
             
             # 振幅計算（NumPy）
-            max_amp = np.max(np.abs(z_data)) if len(z_data) > 0 else 0
+            # 最大値の記録
+            max_amp = np.max(z_data) if len(z_data) > 0 else 0
             self.data_manager.max_amps[sid] = max_amp
+            # 最小値の記録
+            min_amp = np.min(z_data) if len(z_data) > 0 else 0
+            self.data_manager.min_amps[sid] = min_amp
+
+            diff_amp = (max_amp - min_amp) / 2.0
             
             # 直交検波（データが十分にある場合）
             if len(z_data) >= Config.DATA_LEN:
@@ -649,7 +623,7 @@ class Visualizer(QtWidgets.QWidget):
             
             # テキスト更新（0.5秒に1回程度に制限）
             # if elapsed >= 0.5:
-            text_str = f"Calc: {calc_amp:.3f} m/s²\nMax: {max_amp:.3f} m/s²"
+            text_str = f"Calc: {calc_amp:.3f} m/s²\n(Max-Min)/2: {diff_amp:.3f} m/s²"
             self.text_items[sid].setText(text_str)
             # 右上の座標を設定（データ座標系）
             y_range = Config.FULL_SCALE * Config.GRAVITY_MS2
