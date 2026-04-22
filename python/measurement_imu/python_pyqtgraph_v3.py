@@ -29,12 +29,12 @@ from pyqtgraph.Qt import QtCore, QtWidgets
 # ============================================================
 class Config:
     """システム設定"""
-    COM_PORT = "COM7"
+    COM_PORT = "COM10"  # 適切なCOMポートに変更してください
     BAUD_RATE = 460800
     
     FULL_SCALE = 16.0  # [g]
     SAMPLING_RATE = 1660.0  # [Hz]
-    SENSOR_NUM = 7  # 実際に使用するセンサー数
+    SENSOR_NUM = 1  # 実際に使用するセンサー数
     MAX_SENSOR_NUM = 8  # 最大センサー数（グラフは常に8個表示）
     
     VIBRATION_FREQ = 70.0  # [Hz]

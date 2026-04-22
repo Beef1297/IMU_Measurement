@@ -9,12 +9,12 @@
 #define MagdwickHz 100  //sampling rate
 
 
-// hardware timer for logging ACCs
+// hardware timer for logging ACCs 
 hw_timer_t* timer = NULL;
 
 // -------------------- SPI 設定 --------------------
 // D0-0, D1-1, D2-2, D3-21, D4-22, D5-23, D6-16, D7-17
-const int IMU_NUM = 7;
+const int IMU_NUM = 1;
 
 const uint8_t IMU_CS_1 = 0;  // D0
 const uint8_t IMU_CS_2 = 1;  // D1
@@ -29,18 +29,18 @@ const uint8_t IMU_CS_8 = 17;
 LSM6DS3* imuSensors[IMU_NUM];
 uint8_t CS_PINS[IMU_NUM] = { 
   IMU_CS_1,
-  IMU_CS_2,
-  IMU_CS_3,
-  IMU_CS_4,
-  IMU_CS_5,
-  IMU_CS_6,
-  IMU_CS_7,
+  // IMU_CS_2,
+  // IMU_CS_3,
+  // IMU_CS_4,
+  // IMU_CS_5,
+  // IMU_CS_6,
+  // IMU_CS_7,
   // IMU_CS_8
    };  // <--- If IMU_NUM is changed, also change here!
 
 
 // LTC1660 DAC
-LTC1660 dac(IMU_CS_3);
+// LTC1660 dac(IMU_CS_3);
 
 // 基準電圧（VREFピンに接続される電圧）
 const float VREF = 3.3;  // 3.3V
@@ -196,7 +196,7 @@ void setup() {
   }
 
   // DAC初期化
-  dac.begin();
+  // dac.begin();
 
   // For Magdwick Filter;
   // for (int i = 0; i < IMU_NUM; i++) {
